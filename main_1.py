@@ -18,7 +18,7 @@ def timestamp():
 
 # Example usage:
 
-logsFiles = "logs.csv"
+logsFiles = "logs/logs_"+updateTimeNow()+".csv"
 # print(logsFiles)
 
 def appendToFile(text=""):
@@ -26,7 +26,7 @@ def appendToFile(text=""):
         f.write(text+"\n")
 
 
-def hitAPI(NAME=" ", PHONE="", AGE=0, GENDER="MALE", item=0):
+def hitAPI(NAME=" ", PHONE="", GENDER="MALE", item=0):
     # API Endpoint
     url = "https://samarth.prod.api.sapioglobal.com/mysba/form/"
 
@@ -35,7 +35,7 @@ def hitAPI(NAME=" ", PHONE="", AGE=0, GENDER="MALE", item=0):
         "name": NAME,
         "contact_number": str(PHONE),
         "email": "",
-        "age": AGE,
+        "age": "26-40",
         "gender": str(GENDER),
         "state": "Haryana",
         "district": "Yamunanagar",
@@ -56,7 +56,7 @@ def hitAPI(NAME=" ", PHONE="", AGE=0, GENDER="MALE", item=0):
     print("Status Code:", response.status_code)
     print("Response:", response.json())  # If response is JSON, else use response.text
 
-    appendString = f"{item};{NAME};{PHONE};{AGE};{GENDER};{response.json()['status']};{response.json()['message']};{timestamp()}"
+    appendString = f"{item};{NAME};{PHONE};{GENDER};{response.json()['status']};{response.json()['message']};{timestamp()}"
     appendToFile(appendString)
 
 def read_excel_and_store(excel_file_path):
@@ -64,7 +64,7 @@ def read_excel_and_store(excel_file_path):
         df = pd.read_excel(excel_file_path)
 
         # Check if the expected columns exist.  This makes the code more robust.
-        required_columns = ["S.No.", "Name", "Phone No", "Age", "Sex"]  # Adjust if your headers are different
+        required_columns = ["S.No.", "Name", "Phone No"]  # Adjust if your headers are different
         if not all(col in df.columns for col in required_columns):
             print(f"Error: Excel file must contain columns: {required_columns}")
             return {}  # Return empty dict on error
@@ -75,11 +75,8 @@ def read_excel_and_store(excel_file_path):
                 serial_number = int(row["S.No."])  # Convert to integer
                 name = str(row["Name"])  # Convert to string
                 phone_number = str(row["Phone No"])  # Convert to string
-                age = (row["Age"])  # Convert to string
-                sex = str(row["Sex"])  # Convert to string
 
-
-                data_dict[serial_number] = {"name": name, "phone_number": phone_number, "age":age, "sex":sex}
+                data_dict[serial_number] = {"name": name, "phone_number": phone_number}
             except (ValueError, TypeError) as e:
                 print(f"Error processing row {index + 1}: {e}. Skipping this row.") # Provide more context
                 continue  # Skip to the next row if there's a problem
@@ -95,22 +92,13 @@ def read_excel_and_store(excel_file_path):
 
 result_dict = read_excel_and_store(file_path)
 
-# for item in result_dict:
-#     print(item , result_dict[item]["name"], result_dict[item]["phone_number"], result_dict[item]["age"], result_dict[item]["sex"])
 
 for item in result_dict:
     name = result_dict[item]["name"]
     phone = result_dict[item]["phone_number"]
-    gender = "Male" if (result_dict[item]["sex"].capitalize() == 'M') else "Female"
-    if(result_dict[item]["age"] > 40):
-        age = "41 & More"
-    elif(result_dict[item]["age"] > 25 and result_dict[item]["age"] <= 40):
-        age = "26-40"
-    elif(result_dict[item]["age"] < 25):
-        age = "15-25"
-
-    hitAPI(NAME=name, PHONE=phone, GENDER=gender, item=item, AGE=age)
-    # print(item , result_dict[item]["name"], result_dict[item]["phone_number"], result_dict[item]["age"], result_dict[item]["sex"])
+    gender = "Male" if (item <= (len(result_dict) / 2)) else "Female"
+    hitAPI(NAME=name, PHONE=phone, GENDER=gender, item=item)
+    print(item , result_dict[item]["name"], result_dict[item]["phone_number"])
     
 
 
